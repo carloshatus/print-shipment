@@ -40,10 +40,6 @@
     pages = sliceIntoChunks(allItems, maxPerPage);
   }
 
-  function print(): void {
-    window.print();
-  }
-
   function printPage(index: number): void {
     pages = [
       ...pages.map((page, i) => {
@@ -60,6 +56,45 @@
     }, 500);
   }
 
+  function downloadExample() {
+    const exampleJson = [
+      {
+        name: "Nome de exemplo",
+        details: [
+          {
+            desc: "Oferta",
+            obs: "Oferta local",
+            value: 50,
+          },
+        ],
+        desc: "Depósito conta da igreja",
+      },
+      {
+        name: "Outro nome de exemplo",
+        details: [
+          {
+            desc: "Dízimo",
+            value: 50,
+          },
+          {
+            desc: "Oferta",
+            value: 50,
+          },
+        ],
+        desc: "Depósito conta da igreja",
+      },
+    ];
+    const blob = new Blob([JSON.stringify(exampleJson, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = "exemplo.json";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   $: if (files) {
     const read = new FileReader();
     read.readAsText(files[0]);
@@ -69,7 +104,7 @@
   }
 </script>
 
-<div class="noprint">
+<header class="noprint">
   <input type="file" bind:files />
   <input
     type="number"
@@ -85,7 +120,10 @@
     max="6"
     on:change={setMaxItemsPerPage}
   />
-</div>
+  <button on:click={() => downloadExample()}>
+    Baixar arquivo de exemplo
+  </button>
+</header>
 {#each pages as page, i}
   <div class="noprint">
     <button on:click={() => printPage(i)}>{`Imprimir página ${i + 1}`}</button>
@@ -130,9 +168,12 @@
 {/each}
 
 <style>
+  header {
+    font-family: sans-serif;
+    padding: 10px 0px;
+    font-size: 1.6em;
+  }
   .container {
-    width: 21cm;
-    height: 29.7cm;
     font-family: sans-serif;
     font-size: 1.2em;
     display: flex;
@@ -166,6 +207,8 @@
       border: none;
     }
     .container {
+      width: 21cm;
+      height: 29.7cm;
       break-after: always;
       /* for firefox */
       page-break-after: always;
