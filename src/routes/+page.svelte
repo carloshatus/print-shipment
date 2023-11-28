@@ -20,6 +20,8 @@
   let allItems: Item[];
   let pages: Page[] = [];
   let maxPerPage = 6;
+  let currentDate = new Date().toLocaleDateString("pt-BR");
+  let currentPage = 0;
 
   function sliceIntoChunks(arr: Item[], chunkSize: number): Page[] {
     const res = [];
@@ -41,6 +43,7 @@
   }
 
   function printPage(index: number): void {
+    currentPage = index + 1;
     pages = [
       ...pages.map((page, i) => {
         if (i !== index) {
@@ -104,6 +107,14 @@
   }
 </script>
 
+<svelte:head>
+  <title
+    >{`Print Shipment ${
+      currentPage > 0 ? currentPage + " -" : "-"
+    } ${currentDate}`}</title
+  >
+</svelte:head>
+
 <header class="noprint">
   <input type="file" bind:files />
   <input
@@ -138,7 +149,7 @@
         <div>
           {#each item.details as detail, i}
             <div class="detail">
-              <p>{detail.desc}: {detail.obs}</p>
+              <p>{detail.desc}: {detail.obs || ""}</p>
               <p>
                 {detail.value.toLocaleString("pt-BR", {
                   style: "currency",
