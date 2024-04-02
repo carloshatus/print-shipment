@@ -17,6 +17,8 @@
   };
 
   let files: FileList;
+  let text: string;
+  let jsonString: string;
   let allItems: Item[];
   let pages: Page[] = [];
   let maxPerPage = 6;
@@ -40,6 +42,49 @@
   function setMaxItemsPerPage(): void {
     console.log(maxPerPage);
     pages = sliceIntoChunks(allItems, maxPerPage);
+  }
+
+  function textToJson(): void {
+    const responses = [];
+    const lines = text.split("\n");
+    let last: Item | undefined;
+    lines.forEach((line) => {
+      const regexFirstLine =
+        /\d{1,2}\s(\d{1,3}\.?)+\s(?<name>([\w\u00C0-\u00FF]+\s?)+)\s\d{1,2}\s(?<desc>\D+)\s(?<value>(\d{1,3}\D)+\d{2})/gi;
+      const firstLine = regexFirstLine.exec(line);
+      if (firstLine) {
+        if (last) responses.push(last);
+        const { name, desc, value } = firstLine.groups!;
+        last = {
+          name,
+          details: [
+            {
+              desc,
+              value: Number(value.replace(/\D+/g, "")) / 100,
+            },
+          ],
+          desc: "Depósito conta da igreja",
+        };
+        return;
+      }
+      if (!last) return;
+      const regexOtherLine =
+        /\d{1,2}\s(?<desc>\D+)\s(?<value>(\d{1,3}\D)+\d{2})/g;
+      const otherLine = regexOtherLine.exec(line);
+      if (!otherLine) return;
+      const { desc, value } = otherLine.groups!;
+      last.details.push({
+        desc,
+        value: Number(value.replace(/\D+/g, "")) / 100,
+      });
+    });
+    responses.push(last);
+    jsonString = JSON.stringify(responses, null, 2);
+    setItemsByJsonText();
+  }
+
+  function setItemsByJsonText(): void {
+    setItems(jsonString ? JSON.parse(jsonString) : []);
   }
 
   function printPage(index: number): void {
@@ -102,6 +147,9 @@
     const read = new FileReader();
     read.readAsText(files[0]);
     read.onloadend = () => {
+      if (!jsonString) {
+        jsonString = String(read?.result) || "";
+      }
       setItems(JSON.parse(String(read?.result) || ""));
     };
   }
@@ -134,6 +182,18 @@
   <button on:click={() => downloadExample()}>
     Baixar arquivo de exemplo
   </button>
+  <div>
+    <textarea
+      bind:value={text}
+      on:change={textToJson}
+      placeholder="text to json"
+    />
+    <textarea
+      bind:value={jsonString}
+      on:change={setItemsByJsonText}
+      placeholder="json"
+    />
+  </div>
 </header>
 {#each pages as page, i}
   <div class="noprint">
@@ -209,6 +269,10 @@
   .page {
     background-color: #fff;
     border: 1px solid;
+  }
+  textarea {
+    width: 48%;
+    height: 200px;
   }
   @media print {
     .noprint {
