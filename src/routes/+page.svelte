@@ -50,7 +50,7 @@
     let last: Item | undefined;
     lines.forEach((line) => {
       const regexFirstLine =
-        /\d{1,2}\s(\d{1,3}\.?)+\s(?<name>([\w\u00C0-\u00FF]+\s?)+)\s\d{1,2}\s(?<desc>\D+)\s(?<value>(\d{1,3}\D)+\d{2})/gi;
+        /\d{1,2}\s(\d{1,3}\.?)+\s(?<name>([^0-9]+\s?)+)\s\d{1,2}\s(?<desc>\D+)\s(?<value>(\d{1,3}\D)+\d{2})/gi;
       const firstLine = regexFirstLine.exec(line);
       if (firstLine) {
         if (last) responses.push(last);
